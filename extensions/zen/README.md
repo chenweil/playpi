@@ -54,20 +54,3 @@ echo off > ~/.pi/agent/zen  # 停用
 ## 协议
 
 MIT. 见 `LICENSE`。原作者 Kun Chen,改编自 Firstmate 项目的 Zen 实现。
-
-## 仓库布局
-
-```
-playpi/
-  LICENSE                  # 仓库整体 MIT
-  extensions/zen/          # 本扩展
-    index.ts               # 主入口,注册 /zen 命令 + 四个 adapter
-    lib/
-      built-in-tool-shells.ts   # 隐藏内置工具壳的展示层适配
-      collapsed-thinking.ts     # 折叠思考块的展示层适配
-      preference.ts             # ~/.pi/agent/zen 状态持久化
-      visibility.ts             # 共享展示层状态标志
-      working-ship.ts           # 动画小鱼 + 工作指示器 widget
-    LICENSE                # MIT,作者 Kun Chen
-    README.md              # 本文件
-```
