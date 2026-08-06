@@ -1,0 +1,38 @@
+{
+  "name": "playpi-zen",
+  "version": "0.1.0",
+  "description": "Pi Zen - 禅模式展示层扩展:隐藏折叠思考块与内置工具壳,工作指示器换为小鱼动画。仅展示层,不影响 /export /share / 会话存储。",
+  "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "pi-package",
+    "pi",
+    "pi-extension",
+    "zen",
+    "presentation",
+    "minimal-ui",
+    "collapsed-thinking"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chenweil/playpi.git",
+    "directory": "extensions/zen"
+  },
+  "homepage": "https://github.com/chenweil/playpi#readme",
+  "bugs": {
+    "url": "https://github.com/chenweil/playpi/issues"
+  },
+  "files": [
+    "index.ts",
+    "lib/*.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*"
+  },
+  "pi": {
+    "extensions": ["./index.ts"]
+  }
+}
