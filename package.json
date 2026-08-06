@@ -1,0 +1,39 @@
+{
+  "name": "playpi",
+  "version": "0.1.0",
+  "description": "Pi extensions playground. Currently ships extensions/zen - a presentation-layer toggle that hides collapsed thinking and built-in tool shells, with an animated fish working indicator.",
+  "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "pi-package",
+    "pi",
+    "pi-extension",
+    "zen",
+    "minimal-ui"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chenweil/playpi.git"
+  },
+  "homepage": "https://github.com/chenweil/playpi#readme",
+  "bugs": {
+    "url": "https://github.com/chenweil/playpi/issues"
+  },
+  "files": [
+    "extensions/zen/index.ts",
+    "extensions/zen/lib/*.ts",
+    "extensions/zen/LICENSE",
+    "extensions/zen/README.md",
+    "extensions/zen/package.json",
+    "LICENSE"
+  ],
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*"
+  },
+  "pi": {
+    "extensions": [
+      "./extensions/zen/index.ts"
+    ]
+  }
+}
