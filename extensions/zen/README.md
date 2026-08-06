@@ -1,5 +1,7 @@
 # Pi Zen
 
+![](https://img.51ai.vip/2026-08-06-03.25-ykw9R4m0.gif)
+
 Pi 终端 UI 的"禅模式"展示层扩展。开启后:
 
 - 折叠的思考块(thinking block)在对话记录中占用 0 行,而非 1 行空白
