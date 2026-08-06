@@ -18,14 +18,10 @@ Pi 终端 UI 的"禅模式"展示层扩展。开启后:
 pi install git:https://github.com/chenweil/playpi.git
 
 # 或克隆后用本地路径试运行
-pi -e /Users/chenweilong/playground/playpi
-
-# 本仓库约定: Zen 在 extensions/zen/ 下,需要显式指向该子目录
-# (Pi 会自动发现 extensions/ 下的 .ts 扩展,但本仓库布局是 extensions/zen/,所以)
-pi install /Users/chenweilong/playground/playpi
+pi -e <path-to-playpi>
 ```
 
-> Pi 启动时会自动从 `extensions/` 下的 `.ts` / `.js` 文件发现扩展。仓库根目录没有扩展,扩展都在 `extensions/zen/`,把仓库根作为包根即可。
+> Pi 会读取仓库根 `package.json` 的 `pi.extensions` 字段加载扩展,入口是 `./extensions/zen/index.ts`。
 
 ## 使用
 

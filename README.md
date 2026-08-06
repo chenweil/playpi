@@ -10,8 +10,8 @@ Pi agent 扩展集合仓库。每个扩展是独立的子包,可单独安装使�
 # 整体安装(包含仓库内所有扩展)
 pi install git:https://github.com/chenweil/playpi.git
 
-# 试运行,不写入 settings
-pi -e /Users/chenweilong/playground/playpi
+# 试运行,不写入 settings (克隆到本地后,从仓库根目录运行)
+pi -e <path-to-playpi>
 ```
 
 安装后 pi 会读取仓库根 `package.json` 的 `pi.extensions` 字段加载所有扩展。
