@@ -1,7 +1,7 @@
 {
   "name": "playpi-zen",
-  "version": "0.1.0",
-  "description": "Pi Zen - 禅模式展示层扩展:隐藏折叠思考块与内置工具壳,工作指示器换为小鱼动画。仅展示层,不影响 /export /share / 会话存储。",
+  "version": "0.2.0",
+  "description": "Pi Zen - 禅模式展示层扩展:只显示结果,思考块、工具行、非最终 assistant 消息全部隐藏,出问题才显示。仅展示层,不影响 /export /share / 会话存储。",
   "type": "module",
   "license": "MIT",
   "keywords": [
@@ -29,7 +29,7 @@
     "LICENSE"
   ],
   "peerDependencies": {
-    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-coding-agent": "^0.85.0",
     "@earendil-works/pi-tui": "*"
   },
   "pi": {
