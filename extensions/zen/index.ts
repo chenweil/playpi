@@ -3,17 +3,19 @@
 // Adapted from the Firstmate project's Zen implementation.
 // Copyright (c) 2026 Kun Chen. MIT License - see the LICENSE file in this directory.
 //
-// Verified against Pi 0.82.0, which exports its shared tool-row component,
+// Verified against Pi 0.85.1, which exports its shared tool-row component,
 // session_start replacement reasons, agent_start
 // and agent_settled, ExtensionUIContext.setToolsExpanded(), setWorkingVisible(),
 // setWidget() with a disposable component factory, and setHiddenThinkingLabel().
 // ./lib/working-ship.ts owns the animated working presentation this file
-// installs. ./lib/preference.ts owns the local state file. The collapsed-thinking
-// presentation adapter probes the exact public API seam it patches and degrades
+// installs. ./lib/preference.ts owns the local state file. Each transcript
+// adapter probes the exact public API seam it patches and degrades
 // independently with one clear diagnostic (see installZenPresentationAdapter
-// below) if a future Pi removes it. The shared tool-row adapter is limited to
-// Pi's seven known built-in names, so generic custom tools and unsupported
-// transcript classes deliberately stay visible.
+// below) if a future Pi removes it. The transcript adapters implement one rule:
+// show the result, hide the process - thinking blocks, every tool row, and
+// every assistant message that is still a step rather than the answer are
+// filtered out, while failures (a failed tool row, truncation, abort, error)
+// keep rendering through Pi's own components.
 //
 // Zen changes presentation only. It never intercepts, transforms, reroutes,
 // removes, or reorders semantic input, tool execution, model context, session
@@ -21,9 +23,9 @@
 // transcript.
 import { type ExtensionAPI, type ExtensionUIContext } from "@earendil-works/pi-coding-agent";
 import { getKeybindings } from "@earendil-works/pi-tui";
-import { installZenBuiltInToolShellLayout } from "./lib/built-in-tool-shells.ts";
-import { installZenCollapsedThinkingLayout } from "./lib/collapsed-thinking.ts";
+import { installZenAssistantMessageRowLayout } from "./lib/assistant-message-rows.ts";
 import { loadZenPreference, persistZenPreference } from "./lib/preference.ts";
+import { installZenToolExecutionRowLayout } from "./lib/tool-execution-rows.ts";
 import {
   zenPresentationIsActive,
   setZenPresentation,
@@ -48,8 +50,8 @@ function installZenPresentationAdapter(name: string, install: () => void): void 
 }
 
 export default function (pi: ExtensionAPI) {
-  installZenPresentationAdapter("collapsed-thinking", installZenCollapsedThinkingLayout);
-  installZenPresentationAdapter("built-in-tool-shells", installZenBuiltInToolShellLayout);
+  installZenPresentationAdapter("assistant-message-rows", installZenAssistantMessageRowLayout);
+  installZenPresentationAdapter("tool-execution-rows", installZenToolExecutionRowLayout);
 
   let removeTerminalInputHandler: (() => void) | undefined;
   // One logical agent run, tracked from agent_start through agent_settled rather
@@ -95,7 +97,7 @@ export default function (pi: ExtensionAPI) {
     applyWorkingPresentation(ctx.ui, true);
     ctx.ui.setHiddenThinkingLabel(zenPresentationIsActive() ? "" : undefined);
     removeTerminalInputHandler?.();
-    removeTerminalInputHandler = ctx.ui.onTerminalInput((data) => {
+    removeTerminalInputHandler = ctx.ui.onTerminalInput((data): undefined => {
       if (!getKeybindings().matches(data, "tui.input.submit")) return;
 
       const input = ctx.ui.getEditorText().trim();
@@ -137,7 +139,7 @@ export default function (pi: ExtensionAPI) {
   });
 
   pi.registerCommand("zen", {
-    description: "Toggle Zen: hide collapsed thinking and built-in tool shells from the transcript (presentation only).",
+    description: "Toggle Zen: show only the result - hide thinking, tool rows, and non-final assistant messages (presentation only; failures stay visible).",
     handler: async (_args, ctx) => {
       const active = !zenPresentationIsActive();
       // Persist first: if the state file cannot be written, the toggle fails
@@ -145,6 +147,9 @@ export default function (pi: ExtensionAPI) {
       persistZenPreference(active);
       setZenPresentation(active);
       applyWorkingPresentation(ctx.ui, true);
+      // Clearing the hidden-thinking label is also how Zen marks the components
+      // it owns; the label text itself is never rendered because thinking blocks
+      // are dropped from the transcript entirely.
       ctx.ui.setHiddenThinkingLabel(active ? "" : undefined);
 
       // Flip expansion twice to force a transcript redraw while preserving the

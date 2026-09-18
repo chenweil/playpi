@@ -29,11 +29,13 @@ export function setZenStockExportRendering(next: boolean): void {
 }
 
 /**
- * True while Zen should hide the supported transcript chrome: collapsed
- * thinking labels and the known Pi built-in tool call/result shells. Genuine
- * user prompts, assistant text, custom tools, and every other transcript row
- * class are never filtered by this flag.
+ * True while Zen presents agent results only: thinking blocks, tool rows, and
+ * non-final assistant messages are filtered out of the transcript. Failures
+ * stay visible - a failed tool row is the row Pi uses to report a tool failure
+ * or an aborted/errored step, and Pi's truncated/aborted/error notices are left
+ * untouched. Genuine user prompts, the final assistant message, image results,
+ * and every other transcript row class are never filtered by this flag.
  */
-export function zenHidesTranscriptChrome(): boolean {
+export function zenShowsOnlyResults(): boolean {
   return active && !stockExportRendering;
 }
