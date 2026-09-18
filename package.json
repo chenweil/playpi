@@ -1,6 +1,6 @@
 {
   "name": "playpi",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Pi extensions playground. Currently ships extensions/zen - a presentation-layer toggle that shows results only (thinking, tool rows and non-final assistant messages hidden), with an animated fish working indicator.",
   "type": "module",
   "license": "MIT",

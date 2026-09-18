@@ -27,7 +27,7 @@
 // reset() and starts at the normal initial position. State is never a
 // module-level or process-global singleton.
 //
-// Verified against Pi 0.82.0, which exposes ExtensionUIContext.setWidget() with
+// Verified against Pi 0.85.1, which exposes ExtensionUIContext.setWidget() with
 // a component factory, per-widget dispose(), and TUI.requestRender(). Pi renders
 // a widget through Component.render(width), so this module recomputes its track
 // from that width on every frame instead of caching a terminal size that a
