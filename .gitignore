@@ -19,6 +19,11 @@ dist/
 *.tsbuildinfo
 .npm/
 .cache/
+# 仓库只有 peerDependencies,运行时由 Pi 提供,lock 文件会腐烂且误导
+package-lock.json
+
+# Qoder 会话产物
+.qoder/
 
 # Pi 运行时产物
 .pi-glla/
