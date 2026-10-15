@@ -1,0 +1,40 @@
+{
+  "name": "playpi-token-rate",
+  "version": "0.3.0",
+  "description": "Pi Token Rate - statusline 扩展:把当前模型的 output tokens/s 与缓存命中率(CH)发布到状态行。只调 ctx.ui.setStatus(),不接管 footer,可与任何自定义 footer 共存。",
+  "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "pi-package",
+    "pi",
+    "pi-extension",
+    "statusline",
+    "status",
+    "token-rate",
+    "tokens-per-second",
+    "cache-hit",
+    "footer"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chenweil/playpi.git",
+    "directory": "extensions/token-rate"
+  },
+  "homepage": "https://github.com/chenweil/playpi#readme",
+  "bugs": {
+    "url": "https://github.com/chenweil/playpi/issues"
+  },
+  "files": [
+    "index.ts",
+    "lib/token-rate.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "^0.85.0",
+    "@earendil-works/pi-tui": "*"
+  },
+  "pi": {
+    "extensions": ["./index.ts"]
+  }
+}

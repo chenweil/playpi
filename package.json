@@ -1,7 +1,7 @@
 {
   "name": "playpi",
-  "version": "0.2.1",
-  "description": "Pi extensions playground. Currently ships extensions/zen - a presentation-layer toggle that shows results only (thinking, tool rows and non-final assistant messages hidden), with an animated fish working indicator.",
+  "version": "0.3.0",
+  "description": "Pi extensions playground. Ships extensions/zen - a presentation-layer toggle that shows results only (thinking, tool rows and non-final assistant messages hidden), with an animated fish working indicator - and extensions/token-rate - a statusline extension that publishes the latest assistant message's output tokens/s and cache-hit rate via ctx.ui.setStatus() without taking over the footer.",
   "type": "module",
   "license": "MIT",
   "keywords": [
@@ -9,7 +9,10 @@
     "pi",
     "pi-extension",
     "zen",
-    "minimal-ui"
+    "minimal-ui",
+    "token-rate",
+    "statusline",
+    "cache-hit"
   ],
   "repository": {
     "type": "git",
@@ -25,15 +28,24 @@
     "extensions/zen/LICENSE",
     "extensions/zen/README.md",
     "extensions/zen/package.json",
+    "extensions/token-rate/index.ts",
+    "extensions/token-rate/lib/token-rate.ts",
+    "extensions/token-rate/LICENSE",
+    "extensions/token-rate/README.md",
+    "extensions/token-rate/package.json",
     "LICENSE"
   ],
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "^0.85.0",
     "@earendil-works/pi-tui": "*"
   },
+  "scripts": {
+    "test": "node --experimental-strip-types --test extensions/*/lib/*.test.ts"
+  },
   "pi": {
     "extensions": [
-      "./extensions/zen/index.ts"
+      "./extensions/zen/index.ts",
+      "./extensions/token-rate/index.ts"
     ]
   }
 }

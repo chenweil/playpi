@@ -21,6 +21,7 @@ pi -e <path-to-playpi>
 | 扩展 | 简介 | 安装后命令 |
 |---|---|---|
 | [zen](./extensions/zen/) | 禅模式展示层:只显示结果——思考、工具行、非最终回答全部隐藏,出问题(工具失败/截断/中断/报错)时才显示。仅展示层,不影响 /export /share / 会话存储。 | `/zen` |
+| [token-rate](./extensions/token-rate/) | 状态行扩展:把当前模型的 output tokens/s 与缓存命中率(CH)发布到状态行。只调 `ctx.ui.setStatus()`,不接管 footer,可与任何自定义 footer 共存。 | 无(自动生效) |
 
 每个扩展子目录里都有独立的 `README.md`,写明详细用法与配置。
 
