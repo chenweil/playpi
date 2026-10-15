@@ -1,0 +1,36 @@
+{
+  "name": "playpi-minimal-footer",
+  "version": "0.3.0",
+  "description": "Pi Minimal Footer - 3 行式自定义 footer:git:branch±、上下文进度条、provider/model(thinking)/goal、sessionID,以及由 token-rate 发布的缓存命中率(CH)与输出速率(t/s)。",
+  "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "pi-package",
+    "pi",
+    "pi-extension",
+    "footer",
+    "statusline",
+    "minimal-ui"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chenweil/playpi.git",
+    "directory": "extensions/minimal-footer"
+  },
+  "homepage": "https://github.com/chenweil/playpi#readme",
+  "bugs": {
+    "url": "https://github.com/chenweil/playpi/issues"
+  },
+  "files": [
+    "index.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "^0.85.0",
+    "@earendil-works/pi-tui": "*"
+  },
+  "pi": {
+    "extensions": ["./index.ts"]
+  }
+}
