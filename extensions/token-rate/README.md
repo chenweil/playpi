@@ -26,6 +26,7 @@ CH98.0% 24 t/s
 | `CH98.0%` | `cacheRead / (input + cacheRead + cacheWrite)` | 未用到缓存（`cacheRead` 与 `cacheWrite` 都为 0） |
 
 - 耗时优先取 `AssistantMessage.durationMs`（Pi 用单调时钟测的 request-start → response-end），缺失时回退 `message_start` → `message_end` 的 wall-clock 差值。
+- 从会话历史回填的旧消息没有开始基准，耗时无从得知，此时**不显示速率**（而不是显示 `0 t/s`）。
 - 分子只用 `usage.output`。按 Pi 约定 `reasoning` 已包含在 `output` 内，不重复相加。
 - **不做流式估算**：只在 `message_end` 计算一次准确值。流式期间保留上一条的完成值（既不空白，也不把估算值和最终值混在一起）。
 - 数据无效时**清除**该项，绝不显示 `0 t/s` 之类的占位符。

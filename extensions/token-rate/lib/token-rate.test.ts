@@ -199,6 +199,26 @@ describe("MetricsStore", () => {
     assert.strictEqual(store.recordEnd({ usage: { output: 120 } }), true);
     assert.notStrictEqual(store.rateText, "");
   });
+
+  it("没有开始基准时（回填的历史消息）不显示速率，也不显示占位符", () => {
+    const store = new MetricsStore();
+    // 没有 recordStart，也没有 durationMs：耗时未知
+    assert.strictEqual(store.recordEnd({ usage: { output: 1000, input: 100, cacheRead: 900 } }), true);
+    assert.strictEqual(store.rateText, "");
+    assert.strictEqual(store.cacheHitText, "CH90.0%");
+  });
+
+  it("clear 会连 wall-clock 基准一起清掉", () => {
+    const store = new MetricsStore();
+    store.recordStart();
+    store.recordEnd({ usage: { output: 1000 }, durationMs: 1000 });
+    assert.notStrictEqual(store.rateText, "");
+
+    store.clear();
+    // 基准已被清掉，此时回填的消息不该算出速率
+    store.recordEnd({ usage: { output: 1000 } });
+    assert.strictEqual(store.rateText, "");
+  });
 });
 
 describe("status key 约定", () => {

@@ -6,7 +6,10 @@
  * tokens/s: round(usage.output / (elapsedMs / 1000))
  *   elapsedMs 优先取 AssistantMessage.durationMs（Pi 用单调时钟测的
  *   request-start → response-end），缺失时回退 message_start/message_end 的
- *   wall-clock 差值。分子只用 usage.output —— 按 Pi 约定 reasoning 已含在 output 里。
+ *   wall-clock 差值。回退的前提是拿到过开始基准（recordStart 调过）：从会话
+ *   历史回填的旧消息没有基准，耗时无从得知，此时宁可不显示，也不显示
+ *   "0 t/s" 这种占位符。分子只用 usage.output —— 按 Pi 约定 reasoning 已含在
+ *   output 里。
  *
  * CH(缓存命中率): cacheRead / (input + cacheRead + cacheWrite) * 100
  *   口径与 Pi 内置 footer 一致。
@@ -139,6 +142,9 @@ export class MetricsStore {
   clear(): void {
     this.currentRateText = "";
     this.currentCacheHitText = "";
+    // 连 wall-clock 基准一起清掉：回填的历史消息没有开始基准，
+    // 否则会拿上一条消息的基准算出一个无意义的耗时。
+    this.startWall = 0;
   }
 
   /** 记录 assistant message 开始时刻（durationMs 缺失时的 wall-clock 回退基准）。 */
@@ -157,8 +163,14 @@ export class MetricsStore {
   recordEnd(message: AssistantMessageLike | undefined): boolean {
     const usage = message?.usage;
     const durationMs = message?.durationMs;
+    // 耗时三态：有 durationMs 用它；没有但有开始基准时用 wall-clock 差值；
+    // 两者都没有（从会话历史回填的旧消息）则耗时未知，不显示速率。
     const elapsedMs =
-      typeof durationMs === "number" ? durationMs : Date.now() - this.startWall;
+      typeof durationMs === "number"
+        ? durationMs
+        : this.startWall > 0
+          ? Date.now() - this.startWall
+          : null;
 
     const nextRate = formatRateText(computeTokensPerSecond(usage?.output, elapsedMs));
     const nextCacheHit = formatCacheHitText(computeCacheHitPercent(usage));
