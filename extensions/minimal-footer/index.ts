@@ -71,6 +71,9 @@ export default function (pi: ExtensionAPI) {
   let contextWindow: number | undefined;
   let isDirty = false;
   let sessionId: string = "";
+  // 会话工作目录。ExtensionAPI 上没有 cwd 属性（Pi 的 ExtensionAPI 只有 ctx.cwd），
+  // 这里从 session_start 的 ctx 取；pi.exec 的默认 cwd 与之相同。
+  let sessionCwd: string | undefined;
 
   // Keep values fresh so renders pick up changes immediately
   pi.on("model_select", async (event, _ctx) => {
@@ -90,7 +93,7 @@ export default function (pi: ExtensionAPI) {
     // 因此这里整体兜底：拿不到结果就保持当前 dirty 状态，不影响 footer 渲染。
     try {
       const insideWorkTree = await pi
-        .exec("git", ["rev-parse", "--is-inside-work-tree"], { cwd: pi.cwd })
+        .exec("git", ["rev-parse", "--is-inside-work-tree"], { cwd: sessionCwd })
         .catch(() => undefined);
 
       if (insideWorkTree?.stdout.trim() !== "true") {
@@ -102,10 +105,10 @@ export default function (pi: ExtensionAPI) {
       }
 
       const result = await pi
-        .exec("git", ["diff", "--stat"], { cwd: pi.cwd })
+        .exec("git", ["diff", "--stat"], { cwd: sessionCwd })
         .catch(() => undefined);
       const resultStaged = await pi
-        .exec("git", ["diff", "--cached", "--stat"], { cwd: pi.cwd })
+        .exec("git", ["diff", "--cached", "--stat"], { cwd: sessionCwd })
         .catch(() => undefined);
       const dirty =
         (result?.stdout.trim().length ?? 0) > 0 ||
@@ -165,7 +168,7 @@ export default function (pi: ExtensionAPI) {
 
   function getCurrentDirectory(contextCwd: string): string {
     const home = process.env.HOME || process.env.USERPROFILE;
-    const candidates = [pi.cwd, contextCwd, process.env.PWD, process.cwd()].filter(
+    const candidates = [contextCwd, process.env.PWD, process.cwd()].filter(
       (candidate): candidate is string => typeof candidate === "string" && candidate.length > 0,
     );
 
@@ -304,6 +307,7 @@ export default function (pi: ExtensionAPI) {
     contextWindow = ctx.model?.contextWindow;
     thinkingLevel = pi.getThinkingLevel();
     sessionId = ctx.sessionManager.getSessionId() ?? "";
+    sessionCwd = ctx.cwd;
     void refreshDirty();
 
     ctx.ui.setFooter((tui, theme, footerData) => {

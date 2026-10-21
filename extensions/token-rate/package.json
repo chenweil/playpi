@@ -1,6 +1,6 @@
 {
   "name": "playpi-token-rate",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Pi Token Rate - statusline 扩展:把当前模型的 output tokens/s 与缓存命中率(CH)发布到状态行。只调 ctx.ui.setStatus(),不接管 footer,可与任何自定义 footer 共存。",
   "type": "module",
   "license": "MIT",
@@ -31,7 +31,7 @@
     "LICENSE"
   ],
   "peerDependencies": {
-    "@earendil-works/pi-coding-agent": "^0.85.0",
+    "@earendil-works/pi-coding-agent": ">=0.85.0 <2.0.0",
     "@earendil-works/pi-tui": "*"
   },
   "pi": {

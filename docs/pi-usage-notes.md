@@ -73,7 +73,7 @@ Error from provider (Console): OpenCode's free tier can only be used from within
 - `/share`：分享当前会话/结果。
 
 **边界**
-- Zen 开启时，如果触发 `/export` 或 `/share`，会临时切回 stock 渲染，保证导出/分享的是完整内容，不是 Zen 过滤后的展示结果。
+- Zen 开启时，`/export` 与 `/share` 拿到的仍然是完整内容，不需要任何额外操作：Pi 1.3.0 的这两个命令直接从会话数据导出 JSONL/HTML，渲染链路不经过 Zen patch 的 TUI 组件，结构上就不会被 Zen 的展示层过滤影响。
 - 这两条命令只关心最终导出内容，不关心你平时是否开着 Zen。
 
 ---
@@ -172,9 +172,33 @@ pi -e <path-to-playpi>
 
 ### 注意
 
-- Zen 开启时，导出/分享会临时切回完整渲染，确保拿到的是完整内容。
+- Zen 只过滤终端里的展示层，不改会话数据；`/export`、`/share` 导出的始终是完整原文。
 - 导出后的文件如果要二次使用，先确认是否包含完整工具执行链，而不是只有最终结果。
 - 如果要在不同环境复用导出结果，注意其中可能包含环境相关的路径、key 或上下文。
+
+---
+
+## Pi 版本兼容复核
+
+### 当前基线
+
+- Pi `1.3.0`（2026-10-15）是当前最新版本；2026-10-19 ~ 10-21 这一周上游没有发版，main 分支的提交都不涉及扩展 API 的破坏性变更。
+- 仓库三个扩展（zen / token-rate / minimal-footer）已在 Pi 1.3.0 的全屏 TUI 下实测通过。
+- `peerDependencies` 统一写成 `>=0.85.0 <2.0.0`：Pi 不会校验 peer 版本范围，但过窄的范围会让外部安装者拿到错误信息。
+
+### 上游两个已知坑
+
+- **空 `setHiddenThinkingLabel("")` 不会隐藏思考块**（上游 issue #11152，10-19 提交，已关闭未修）：Pi 1.3.0 对空标签仍会多画两行空白。Zen 靠的是「从展示副本里删掉 thinking block」，空标签只当「组件归 Zen 管」的标记，别改成只设标签。
+- **会话替换时内置 footer 会闪现**（上游 issue #11025，已关闭未修）：`/new`、`/resume`、`/fork`、`/reload` 的瞬间内置 footer 会短暂出现再换回自定义 footer，约 20~70ms，不影响功能。
+
+### 复核方式
+
+```bash
+npm test        # 纯函数单测（token-rate 口径）
+npm run typecheck  # 用 Pi 1.3.0 的类型定义检查三个扩展
+```
+
+类型检查是后加的护栏：Pi 1.3.0 的 `ExtensionAPI` 上没有 `cwd`（只有 `ctx.cwd`），而 Pi 从 0.84 起就没有这个属性，靠类型检查才发现 minimal-footer 里的 `pi.cwd` 一直是 `undefined`。
 
 ---
 

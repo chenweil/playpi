@@ -3,7 +3,7 @@
 // Adapted from the Firstmate project's Zen implementation.
 // Copyright (c) 2026 Kun Chen. MIT License - see the LICENSE file in this directory.
 //
-// Verified against Pi 0.85.1, which exports AssistantMessageComponent with an
+// Verified against Pi 1.3.0, which exports AssistantMessageComponent with an
 // updateContent method. installZenAssistantMessageRowLayout() probes that exact
 // public seam and throws if it is missing; index.ts catches that and skips only
 // this adapter with one clear diagnostic instead of blocking Zen or Pi.
@@ -44,8 +44,9 @@ type ZenAssistantMessageRowPatch = {
   hidesProcessRows: () => boolean;
 };
 
-// Keep the introduction-version symbol stable so a compatible upgrade cannot
-// double-patch a live process.
+// Keep this key stable across Pi upgrades: it records the first Pi version this
+// patch was written against (0.85.1) and is the idempotency guard that stops a
+// /reload inside a live process from stacking a second patch on the first.
 const ZEN_ASSISTANT_MESSAGE_ROW_PATCH = Symbol.for(
   "pi-zen:assistant-message-rows:pi-0.85.1",
 );
@@ -78,6 +79,10 @@ export function installZenAssistantMessageRowLayout(): void {
     const state = this as unknown as AssistantMessagePresentationState;
     // Zen marks its own presentation by clearing the hidden-thinking label, so a
     // component Zen never touched keeps Pi's behaviour even while Zen is on.
+    // The empty label is only a marker: Pi 1.3.0 still draws two blank rows for a
+    // hidden thinking block even when the label is empty (upstream issue #11152,
+    // closed without a fix), so Zen hides thinking by dropping the blocks from
+    // the presentation copy below - never by relying on the label.
     const hides = state.hiddenThinkingLabel === "" && patch.hidesProcessRows();
     let presentationMessage = message;
     if (hides) {

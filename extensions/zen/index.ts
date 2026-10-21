@@ -3,10 +3,10 @@
 // Adapted from the Firstmate project's Zen implementation.
 // Copyright (c) 2026 Kun Chen. MIT License - see the LICENSE file in this directory.
 //
-// Verified against Pi 0.85.1, which exports its shared tool-row component,
-// session_start replacement reasons, agent_start
-// and agent_settled, ExtensionUIContext.setToolsExpanded(), setWorkingVisible(),
-// setWidget() with a disposable component factory, and setHiddenThinkingLabel().
+// Verified against Pi 1.3.0, which exports AssistantMessageComponent and
+// ToolExecutionComponent, and whose ExtensionUIContext still provides
+// setToolsExpanded(), setWorkingVisible(), setWidget() with a disposable
+// component factory, and setHiddenThinkingLabel().
 // ./lib/working-ship.ts owns the animated working presentation this file
 // installs. ./lib/preference.ts owns the local state file. Each transcript
 // adapter probes the exact public API seam it patches and degrades
@@ -19,18 +19,15 @@
 //
 // Zen changes presentation only. It never intercepts, transforms, reroutes,
 // removes, or reorders semantic input, tool execution, model context, session
-// storage, or export data; /export and /share render the complete stock
-// transcript.
+// storage, or export data. /export and /share stay complete on their own:
+// since Pi 1.3.0 both render from session data (JSONL/HTML) and never go
+// through the two TUI components Zen patches, so no export-time switch is
+// needed.
 import { type ExtensionAPI, type ExtensionUIContext } from "@earendil-works/pi-coding-agent";
-import { getKeybindings } from "@earendil-works/pi-tui";
 import { installZenAssistantMessageRowLayout } from "./lib/assistant-message-rows.ts";
 import { loadZenPreference, persistZenPreference } from "./lib/preference.ts";
 import { installZenToolExecutionRowLayout } from "./lib/tool-execution-rows.ts";
-import {
-  zenPresentationIsActive,
-  setZenPresentation,
-  setZenStockExportRendering,
-} from "./lib/visibility.ts";
+import { zenPresentationIsActive, setZenPresentation } from "./lib/visibility.ts";
 import {
   ZEN_WORKING_SHIP_WIDGET_KEY,
   createZenWorkingShipAnimation,
@@ -53,7 +50,6 @@ export default function (pi: ExtensionAPI) {
   installZenPresentationAdapter("assistant-message-rows", installZenAssistantMessageRowLayout);
   installZenPresentationAdapter("tool-execution-rows", installZenToolExecutionRowLayout);
 
-  let removeTerminalInputHandler: (() => void) | undefined;
   // One logical agent run, tracked from agent_start through agent_settled rather
   // than from turns or tool calls, so the boat never flickers between tool calls,
   // automatic continuations, retries, or compaction that stay inside the same run.
@@ -89,37 +85,12 @@ export default function (pi: ExtensionAPI) {
 
   pi.on("session_start", (_event, ctx) => {
     setZenPresentation(loadZenPreference());
-    setZenStockExportRendering(false);
     agentRunActive = false;
     workingShipShown = false;
     // A genuine new session lifetime starts the boat at the normal initial position.
     workingShipAnimation.reset();
     applyWorkingPresentation(ctx.ui, true);
     ctx.ui.setHiddenThinkingLabel(zenPresentationIsActive() ? "" : undefined);
-    removeTerminalInputHandler?.();
-    removeTerminalInputHandler = ctx.ui.onTerminalInput((data): undefined => {
-      if (!getKeybindings().matches(data, "tui.input.submit")) return;
-
-      const input = ctx.ui.getEditorText().trim();
-      if (
-        input !== "/share" &&
-        input !== "/export" &&
-        !input.startsWith("/export ")
-      ) {
-        return;
-      }
-
-      // /export and /share render through the same tool renderers the transcript
-      // uses, so force stock output for the duration of the command. Session and
-      // export data are never filtered; this only concerns the visual components.
-      setZenStockExportRendering(true);
-      setTimeout(() => {
-        setZenStockExportRendering(false);
-        const expanded = ctx.ui.getToolsExpanded();
-        ctx.ui.setToolsExpanded(!expanded);
-        ctx.ui.setToolsExpanded(expanded);
-      }, 0);
-    });
   });
 
   pi.on("agent_start", (_event, ctx) => {

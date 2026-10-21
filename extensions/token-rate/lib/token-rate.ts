@@ -120,23 +120,25 @@ export function findLastAssistantMessage(entries: unknown): AssistantMessageLike
  */
 export class MetricsStore {
   private startWall = 0;
-  private rateText = "";
-  private cacheHitText = "";
+  // 私有字段与对外的 getter 不能同名，否则 TS 报 Duplicate identifier，
+  // 且运行时实例字段会遮蔽原型上的 getter，getter 变成死代码。
+  private currentRateText = "";
+  private currentCacheHitText = "";
 
   /** 最近一条已完成 assistant message 的格式化速率，没有时为 ""。 */
   get rateText(): string {
-    return this.rateText;
+    return this.currentRateText;
   }
 
   /** 最近一条已完成 assistant message 的格式化命中率，没有时为 ""。 */
   get cacheHitText(): string {
-    return this.cacheHitText;
+    return this.currentCacheHitText;
   }
 
   /** 清空两个指标（新会话开始或会话结束时调用）。 */
   clear(): void {
-    this.rateText = "";
-    this.cacheHitText = "";
+    this.currentRateText = "";
+    this.currentCacheHitText = "";
   }
 
   /** 记录 assistant message 开始时刻（durationMs 缺失时的 wall-clock 回退基准）。 */
@@ -161,11 +163,11 @@ export class MetricsStore {
     const nextRate = formatRateText(computeTokensPerSecond(usage?.output, elapsedMs));
     const nextCacheHit = formatCacheHitText(computeCacheHitPercent(usage));
 
-    if (nextRate === this.rateText && nextCacheHit === this.cacheHitText) {
+    if (nextRate === this.currentRateText && nextCacheHit === this.currentCacheHitText) {
       return false;
     }
-    this.rateText = nextRate;
-    this.cacheHitText = nextCacheHit;
+    this.currentRateText = nextRate;
+    this.currentCacheHitText = nextCacheHit;
     return true;
   }
 }

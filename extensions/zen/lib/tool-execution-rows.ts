@@ -3,7 +3,7 @@
 // Adapted from the Firstmate project's Zen implementation.
 // Copyright (c) 2026 Kun Chen. MIT License - see the LICENSE file in this directory.
 //
-// Verified against Pi 0.85.1, which exports ToolExecutionComponent.
+// Verified against Pi 1.3.0, which exports ToolExecutionComponent.
 // installZenToolExecutionRowLayout() probes that exact public seam and throws if
 // it is missing; index.ts catches that and skips only this adapter with one
 // clear diagnostic instead of blocking Zen or Pi.
@@ -32,6 +32,9 @@ type ZenToolExecutionRowPatch = {
   hidesRows: () => boolean;
 };
 
+// Keep this key stable across Pi upgrades: it records the first Pi version this
+// patch was written against (0.85.1) and is the idempotency guard that stops a
+// /reload inside a live process from stacking a second patch on the first.
 const ZEN_TOOL_EXECUTION_ROW_PATCH = Symbol.for(
   "pi-zen:tool-execution-rows:pi-0.85.1",
 );

@@ -55,21 +55,25 @@ echo off > ~/.pi/agent/zen  # 停用
 
 ## 验证
 
-本扩展验证通过的 Pi 版本:`0.85.1`。
+本扩展验证通过的 Pi 版本:`1.3.0`。
 
 两个适配器各自探测它 patch 的公开 API,缺失时只关闭那一项并给出诊断,不影响其余功能。
+
+`/export` 与 `/share` 不需要额外处理:Pi 1.3.0 的这两个命令直接从会话数据导出 JSONL/HTML,渲染链路不经过 Zen patch 的两个 TUI 组件(`AssistantMessageComponent` / `ToolExecutionComponent`),所以导出结果天然是完整原文。
 
 工具行不再按工具名/来源区分:Zen 开启时所有工具行都隐藏,只有 `isError` 的那一行交回 Pi 原样渲染(这也是 Pi 上报工具失败与中断/报错步骤的地方)。Pi 0.85 把内置工具渲染器拆到 `core/tools/renderers` 后,`InteractiveMode.getRegisteredToolDefinition()` 交给 `ToolExecutionComponent` 的是 `withBuiltInRenderers()` 生成的合并副本——旧版靠对象身份判定内置工具的写法会在这条路径上静默失效,因此该判定已整体去掉。
 
 ### 已知取舍
 
 - Zen 开启时 `Ctrl+T`(显示/隐藏思考块)无法显示思考块。要看思考过程先 `/zen` 关闭。
+- 隐藏思考靠的是「从展示副本里删掉 thinking block」,不是靠 `setHiddenThinkingLabel("")`:Pi 1.3.0 对空标签仍会多画两行空白(上游 issue #11152,已关闭未修)。空标签在 Zen 里只当「这个组件归 Zen 管」的标记用,不要改成只设标签。
 - 其它扩展如果依赖工具行可见性(例如在工具行上叠加自己的展示),那些展示在 Zen 开启时也会一起消失;工具执行本身不受影响。
 
 如果未来 Pi 移除了它依赖的 API,Zen 会只关闭对应那一项,其余功能继续可用,并在终端给出明确诊断。
 
 ## 更新记录
 
+- **0.2.2** — 兼容性复核 Pi 1.3.0:删除 `/export`、`/share` 的「强制原样渲染」拦截(两个命令在 Pi 1.3.0 直接从会话数据导出,不经过被 patch 的 TUI 组件,拦截已是死代码);peerDependencies 放宽到 `>=0.85.0 <2.0.0`;补充空标签不隐藏思考块的说明。
 - **0.2.1** — 元数据对齐 0.2.0 语义:`keywords` 从 `collapsed-thinking` 改为 `result-only`;工作指示器注释的验证版本从 Pi 0.82.0 改为 0.85.1。
 - **0.2.0** — 支持 Pi 0.85(验证版本 0.85.1):工具行改为全量隐藏,不再依赖内置工具对象身份判定(Pi 0.85 拆分内置渲染器后旧判定静默失效);带工具调用的中间步骤 assistant 消息不再渲染;工具失败行仍原样显示。
 - **0.1.0** — 初始版本(基于 Pi 0.82 验证)。

@@ -76,7 +76,7 @@ ctx.ui.setFooter((tui, theme, footerData) => ({
 
 - 通过 `ctx.ui.setStatus()` 发布，Pi 自动触发重绘，扩展本身不需要（也无权）调用 `requestRender`。
 - 非交互模式（`--print` / JSON / RPC）下 `setStatus` 是安全的 no-op，扩展不会报错。
-- 已验证 Pi 1.1.0。
+- 已验证 Pi 1.3.0。
 
 ## 协议
 
