@@ -31,6 +31,11 @@
 // independent of content in Pi's renderer, so they keep working untouched.
 import type { AssistantMessageComponent as PiAssistantMessageComponent } from "@earendil-works/pi-coding-agent";
 import * as PiCodingAgent from "@earendil-works/pi-coding-agent";
+import {
+  computeZenAssistantContent,
+  zenMessageIsStep,
+  zenMessageReportsProblem,
+} from "./presentation.ts";
 import { zenShowsOnlyResults } from "./visibility.ts";
 
 type AssistantMessage = Parameters<PiAssistantMessageComponent["updateContent"]>[0];
@@ -86,14 +91,11 @@ export function installZenAssistantMessageRowLayout(): void {
     const hides = state.hiddenThinkingLabel === "" && patch.hidesProcessRows();
     let presentationMessage = message;
     if (hides) {
-      const isStep = message.content.some((block) => block.type === "toolCall");
-      const reportsProblem =
-        message.stopReason === "error" || message.stopReason === "aborted";
-      const content = !isStep
-        ? message.content.filter((block) => block.type !== "thinking")
-        : reportsProblem
-          ? []
-          : message.content.filter((block) => block.type === "toolCall");
+      // 过滤规则在 ./presentation.ts（纯函数，可单测），这里只负责喂数据。
+      const content = computeZenAssistantContent(message.content, {
+        isStep: zenMessageIsStep(message),
+        reportsProblem: zenMessageReportsProblem(message),
+      });
       if (content.length !== message.content.length) {
         presentationMessage = { ...message, content };
       }

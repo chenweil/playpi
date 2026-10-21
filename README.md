@@ -26,6 +26,20 @@ pi -e <path-to-playpi>
 
 每个扩展子目录里都有独立的 `README.md`,写明详细用法与配置。
 
+## 开发与验证
+
+三道自动关卡,改完依次跑过:
+
+```bash
+npm test          # 全部单测:token-rate 口径 + zen 过滤规则 + 扩展加载冒烟
+npm run typecheck # 用当前 Pi 的类型定义检查三个扩展
+npm run smoke     # 只跑加载冒烟:三个扩展能否加载、session_start 能否跑通
+```
+
+单测放在各扩展的 `lib/*.test.ts`,跨扩展的加载冒烟放在 `tests/`。测试会把 `PI_CODING_AGENT_DIR` 指向临时目录,不会读写你真实的 `~/.pi/agent/zen`。
+
+Pi 升级后除了跑这三道关卡,还要手工过一遍:`/zen` 开启时失败的工具行必须可见、成功的工具行必须不可见,以及 `/export` 出来的文件必须是完整原文。详见 `docs/pi-usage-notes.md` 的「Pi 版本兼容复核」。
+
 ## 协议
 
 仓库内所有内容均为 MIT License,见各子目录的 `LICENSE` 文件。

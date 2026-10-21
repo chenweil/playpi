@@ -25,6 +25,7 @@
   "files": [
     "extensions/zen/index.ts",
     "extensions/zen/lib/*.ts",
+    "!extensions/zen/lib/*.test.ts",
     "extensions/zen/LICENSE",
     "extensions/zen/README.md",
     "extensions/zen/package.json",
@@ -40,8 +41,9 @@
     "@earendil-works/pi-tui": "*"
   },
   "scripts": {
-    "test": "node --experimental-strip-types --test extensions/*/lib/*.test.ts",
-    "typecheck": "tsc --noEmit --strict --target es2022 --lib es2023 --module esnext --moduleResolution bundler --allowImportingTsExtensions --skipLibCheck --types node extensions/zen/index.ts extensions/token-rate/index.ts extensions/minimal-footer/index.ts extensions/token-rate/lib/token-rate.test.ts"
+    "test": "node --experimental-strip-types --test extensions/*/lib/*.test.ts tests/*.test.ts",
+    "smoke": "node --experimental-strip-types --test tests/*.test.ts",
+    "typecheck": "tsc --noEmit --strict --target es2022 --lib es2023 --module esnext --moduleResolution bundler --allowImportingTsExtensions --skipLibCheck --types node extensions/zen/index.ts extensions/token-rate/index.ts extensions/minimal-footer/index.ts extensions/zen/lib/presentation.ts extensions/zen/lib/presentation.test.ts extensions/zen/lib/zen.test.ts extensions/token-rate/lib/token-rate.ts extensions/token-rate/lib/token-rate.test.ts tests/extension-load.test.ts"
   },
   "devDependencies": {
     "typescript": "^5.9.3"

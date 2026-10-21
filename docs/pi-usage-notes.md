@@ -193,10 +193,22 @@ pi -e <path-to-playpi>
 
 ### 复核方式
 
+三道自动关卡 + 一次手工过一遍：
+
 ```bash
-npm test        # 纯函数单测（token-rate 口径）
-npm run typecheck  # 用 Pi 1.3.0 的类型定义检查三个扩展
+npm test          # 全部单测（token-rate 口径 + zen 过滤规则 + 扩展加载冒烟）
+npm run typecheck # 用当前 Pi 的类型定义检查三个扩展
+npm run smoke     # 只跑加载冒烟：三个扩展能否加载、session_start 能否跑通
 ```
+
+`npm test` 与 `npm run smoke` 都会把 `PI_CODING_AGENT_DIR` 指向临时目录，不会读写你真实的 `~/.pi/agent/zen`。
+
+Pi 升级后手工过一遍：
+
+1. 启动 pi，footer 三行是否齐全（分支± / 上下文进度条 / provider·model·thinking / sessionID / CH+t/s）。
+2. `/zen` 开启后跑一个**会失败**的命令：失败行必须可见 —— 这是 zen 的核心承诺，也是最容易被改坏的一条。
+3. `/zen` 开启后跑一个**会成功**的命令：工具行必须不可见，最终回答可见。
+4. `/export` 一个文件，确认里面是完整原文（含工具调用与工具输出），不是 Zen 过滤后的展示结果。
 
 类型检查是后加的护栏：Pi 1.3.0 的 `ExtensionAPI` 上没有 `cwd`（只有 `ctx.cwd`），而 Pi 从 0.84 起就没有这个属性，靠类型检查才发现 minimal-footer 里的 `pi.cwd` 一直是 `undefined`。
 

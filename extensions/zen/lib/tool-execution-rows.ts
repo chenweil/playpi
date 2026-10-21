@@ -20,6 +20,7 @@
 // call/result shell, whatever tool produced them.
 import { ToolExecutionComponent } from "@earendil-works/pi-coding-agent";
 import type { Component } from "@earendil-works/pi-tui";
+import { collectToolRowImages, shouldRenderStockToolRow } from "./presentation.ts";
 import { zenShowsOnlyResults } from "./visibility.ts";
 
 type ToolRowPresentationState = {
@@ -61,16 +62,15 @@ export function installZenToolExecutionRowLayout(): void {
   const patch: ZenToolExecutionRowPatch = { hidesRows };
   ToolExecutionComponent.prototype.render = function (width: number): string[] {
     const state = this as unknown as ToolRowPresentationState;
-    if (!patch.hidesRows() || state.result?.isError) {
+    // 判定规则在 ./presentation.ts（纯函数，可单测），这里只负责喂数据。
+    if (shouldRenderStockToolRow(patch.hidesRows(), state.result?.isError)) {
       return originalRender.call(this, width);
     }
 
     const lines: string[] = [];
-    for (let index = 0; index < state.imageComponents.length; index += 1) {
-      const spacer = state.imageSpacers[index];
-      if (spacer) lines.push(...spacer.render(width));
-      const image = state.imageComponents[index];
-      if (image) lines.push(...image.render(width));
+    for (const entry of collectToolRowImages(state.imageComponents, state.imageSpacers)) {
+      if (entry.spacer) lines.push(...entry.spacer.render(width));
+      if (entry.image) lines.push(...entry.image.render(width));
     }
     return lines;
   };

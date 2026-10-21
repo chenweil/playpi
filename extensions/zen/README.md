@@ -59,6 +59,8 @@ echo off > ~/.pi/agent/zen  # 停用
 
 两个适配器各自探测它 patch 的公开 API,缺失时只关闭那一项并给出诊断,不影响其余功能。
 
+过滤规则集中在 `lib/presentation.ts`（纯函数，不依赖 Pi 运行时，有单测覆盖）：思考块过滤、步骤判定、失败步骤丢弃、失败工具行保留、图片结果保留。两个适配器只负责把 Pi 组件的状态喂进来、再把结果交回 Pi 渲染。
+
 `/export` 与 `/share` 不需要额外处理:Pi 1.3.0 的这两个命令直接从会话数据导出 JSONL/HTML,渲染链路不经过 Zen patch 的两个 TUI 组件(`AssistantMessageComponent` / `ToolExecutionComponent`),所以导出结果天然是完整原文。
 
 工具行不再按工具名/来源区分:Zen 开启时所有工具行都隐藏,只有 `isError` 的那一行交回 Pi 原样渲染(这也是 Pi 上报工具失败与中断/报错步骤的地方)。Pi 0.85 把内置工具渲染器拆到 `core/tools/renderers` 后,`InteractiveMode.getRegisteredToolDefinition()` 交给 `ToolExecutionComponent` 的是 `withBuiltInRenderers()` 生成的合并副本——旧版靠对象身份判定内置工具的写法会在这条路径上静默失效,因此该判定已整体去掉。
