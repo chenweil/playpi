@@ -2,6 +2,25 @@
 
 这里记录项目开发中使用 pi 时的踩坑、配置和常用模式。
 
+## 外部参考资源
+
+查 Pi 的行为、API、生态时按这个顺序用，**不要凭记忆猜**。以下链接 2026-10-28 实测均可达。
+
+| 资源 | 地址 | 什么时候用 |
+|---|---|---|
+| Pi 官方文档 | https://pi.dev/docs/latest | **首选**。安装、模型配置、Session/Context、Skills、Extension、CLI、Settings、环境变量都能查到；扩展 API 有变动以 `Build Extensions` 页为准 |
+| Pi 官方 GitHub | https://github.com/earendil-works/pi | 查源码与上游 issue；`packages/coding-agent/docs/` 是官方文档的源文件，改文档前先看它。本仓库记录的 #11152、#11025 都在这里 |
+| Pi 官方包市场 | https://pi.dev/packages | 官方收录的 extension / skill / prompt / theme 目录（2026-10 已 5000+ 条）。想复用现成能力先在这里搜，别先自己写 |
+| Pi Index | https://piindex.dev | 社区目录，188 条资源、27 个分类，按 subagent、上下文管理、浏览器自动化等专题归类，有中文界面。**独立第三方站点，收录不代表官方背书** |
+| Pi 学习蓝皮书 | https://pi.xiaomovps.com | 中文学习路线：安装 → 第一个任务 → Context → Skill/Extension → 长期工作流，另含 Earendil 授权译文。适合新人上手、写扩展前补概念 |
+
+### 用法约定
+
+- **写扩展前**：官方文档的 `Build Extensions` 与 `Build Terminal UI Components` 两页过一遍，比翻源码快。
+- **怀疑是上游 bug**：去官方 GitHub 搜 issue，编号写进本文档的「已知上游坑」，别只留在本机。
+- **想抄现成的**：先查官方包市场，再查 Pi Index。社区扩展装到本机前先读它的 README 和发布者，不要直接整仓塞进 `pi.extensions`。
+- **蓝皮书是第三方教程**（MIT）；与官方文档冲突时以官方文档为准。
+
 ## 模型选择与保存
 
 ### 踩坑：scoped-models 选择后不保存
@@ -183,7 +202,7 @@ pi -e <path-to-playpi>
 ### 当前基线
 
 - Pi `1.3.0`（2026-10-15）是当前最新版本；2026-10-19 ~ 10-21 这一周上游没有发版，main 分支的提交都不涉及扩展 API 的破坏性变更。
-- 仓库三个扩展（zen / token-rate / minimal-footer）已在 Pi 1.3.0 的全屏 TUI 下实测通过。
+- 仓库的 zen / token-rate / minimal-footer 已在 Pi 1.3.0 的全屏 TUI 下实测通过；endbell 随包发布较晚，尚未做同等的全屏 TUI 手工复核。
 - `peerDependencies` 统一写成 `>=0.85.0 <2.0.0`：Pi 不会校验 peer 版本范围，但过窄的范围会让外部安装者拿到错误信息。
 
 ### 上游两个已知坑
@@ -197,8 +216,8 @@ pi -e <path-to-playpi>
 
 ```bash
 npm test          # 全部单测（token-rate 口径 + zen 过滤规则 + 扩展加载冒烟）
-npm run typecheck # 用当前 Pi 的类型定义检查三个扩展
-npm run smoke     # 只跑加载冒烟：三个扩展能否加载、session_start 能否跑通
+npm run typecheck # 用当前 Pi 的类型定义检查所有扩展
+npm run smoke     # 只跑加载冒烟：各扩展能否加载、session_start 能否跑通
 ```
 
 `npm test` 与 `npm run smoke` 都会把 `PI_CODING_AGENT_DIR` 指向临时目录，不会读写你真实的 `~/.pi/agent/zen`。

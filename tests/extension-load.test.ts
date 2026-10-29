@@ -1,5 +1,5 @@
 /**
- * 三个扩展的加载冒烟测试：确认它们在当前 Pi 的类型与运行时下能加载、能注册预期
+ * 四个扩展的加载冒烟测试：确认它们在当前 Pi 的类型与运行时下能加载、能注册预期
  * 资源，并且 session_start 里用到的 ctx.ui 方法都还在。
  *
  * 运行：npm run smoke
@@ -13,12 +13,14 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import zen from "../extensions/zen/index.ts";
 import tokenRate from "../extensions/token-rate/index.ts";
 import minimalFooter from "../extensions/minimal-footer/index.ts";
+import endbell from "../extensions/endbell/index.ts";
 
 type Handler = (...args: unknown[]) => unknown;
 
-function createStubPi() {
+function createStubPi(options: { allowExec?: boolean } = {}) {
   const handlers = new Map<string, Handler>();
   const commands = new Map<string, { description: string; handler: Handler }>();
+  const execCalls: Array<{ command: string; args: string[] }> = [];
   const pi = {
     on(event: string, handler: Handler) {
       handlers.set(event, handler);
@@ -32,11 +34,15 @@ function createStubPi() {
     getThinkingLevel() {
       return "off";
     },
-    exec() {
-      throw new Error("冒烟测试里不应真的执行命令");
+    exec(command: string, args: string[]) {
+      if (!options.allowExec) {
+        throw new Error("冒烟测试里不应真的执行命令");
+      }
+      execCalls.push({ command, args });
+      return Promise.resolve(undefined);
     },
   };
-  return { pi, handlers, commands };
+  return { pi, handlers, commands, execCalls };
 }
 
 let agentDir: string;
@@ -131,5 +137,28 @@ describe("扩展加载冒烟", () => {
       },
     });
     assert.ok(footerInstalled, "minimal-footer 应调用 ctx.ui.setFooter");
+  });
+
+  it("endbell 注册必要事件", () => {
+    const { pi, handlers } = createStubPi();
+    endbell(pi as unknown as ExtensionAPI);
+
+    for (const event of ["tool_call", "tool_execution_end", "ui_prompt_start", "agent_settled"]) {
+      assert.ok(handlers.has(event), `endbell 应订阅 ${event}`);
+    }
+  });
+
+  it("endbell 在对话落定时播铃,手动中止时不播", async () => {
+    const { pi, handlers, execCalls } = createStubPi({ allowExec: true });
+    endbell(pi as unknown as ExtensionAPI);
+    const settled = handlers.get("agent_settled");
+    assert.ok(settled);
+
+    await settled({ type: "agent_settled", aborted: true });
+    assert.strictEqual(execCalls.length, 0, "手动中止时不应播铃");
+
+    await settled({ type: "agent_settled", aborted: false });
+    assert.strictEqual(execCalls.length, 1, "正常落定应播一声");
+    assert.strictEqual(execCalls[0]?.command, "afplay");
   });
 });

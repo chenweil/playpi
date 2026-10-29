@@ -1,14 +1,14 @@
 /**
  * Minimal Footer — 3 行布局
  *
- * 第 1 行: git:branch±  |  [###.......] XX% • 上下文长度  |  接入配置名 • model (thinking) • goal
+ * 第 1 行: 目录路径 (~/project)  git:branch±
  * 第 2 行: sessionID (单列)
- * 第 3 行: CH(缓存命中率) • t/s(输出速率) • 路径 (单列)
+ * 第 3 行: [###.......] XX% • 上下文长度  |  CH(缓存命中率) • t/s(输出速率)  |  接入配置名 • model (thinking) • goal
  *
- * 第 3 行的 CH / t/s 由 token-rate 扩展（playpi 包）通过 ctx.ui.setStatus() 发布，
+ * 第 3 行中列的 CH / t/s 由 token-rate 扩展（playpi 包）通过 ctx.ui.setStatus() 发布，
  * 这里只负责读取并排版，不再自己计算，避免两份重复口径。
  * 依赖 key: "cache-hit" 与 "token-rate"（见 token-rate 的 README）。
- * 未安装该扩展时第 3 行只显示路径。
+ * 未安装该扩展时第 3 行中列留空。
  */
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
@@ -262,9 +262,10 @@ export default function (pi: ExtensionAPI) {
     return PROVIDER_COLORS[normalized];
   }
 
-  // 自适应三列布局: 内容紧凑排列, 列间 2 空格; 超宽时优先保中间(上下文条)和左边(分支), 只压缩右边(模型)
-  function layoutRow(width: number, left: string, middle: string, right: string, gap = 2): string {
-    const items = [left, middle, right].filter((s) => visibleWidth(s) > 0);
+  // 自适应多列布局: 内容紧凑排列, 列间 2 空格;
+  // 超宽时中间列定宽保留, 首列优先保留, 只压缩末列(模型)
+  function layoutRow(width: number, columns: string[], gap = 2): string {
+    const items = columns.filter((s) => visibleWidth(s) > 0);
     if (items.length === 0) return "";
     if (items.length === 1) return truncateToWidth(items[0], width);
     const gapStr = " ".repeat(gap);
@@ -272,33 +273,31 @@ export default function (pi: ExtensionAPI) {
     const total = widths.reduce((a, b) => a + b, 0) + gap * (items.length - 1);
     if (total <= width) return items.join(gapStr);
 
-    // 超宽: 三列全在是常见情况, 中间定宽保留, 左边优先保留, 只截右边
-    if (visibleWidth(left) > 0 && visibleWidth(middle) > 0 && visibleWidth(right) > 0) {
-      const lw = visibleWidth(left);
-      const mw = visibleWidth(middle);
-      const avail = width - mw - gap * 2;
-      if (avail <= 0) return truncateToWidth(middle, width); // 极窄屏只留上下文条
-      if (lw >= avail) {
-        // 左边分支本身超长才走这里: 左 35% / 右 65%
-        const lTarget = Math.max(4, Math.floor(avail * 0.35));
-        const rTarget = Math.max(0, avail - lTarget);
-        return truncateToWidth(left, lTarget) + gapStr + middle + gapStr + truncateToWidth(right, rTarget);
-      }
-      const rTarget = Math.max(0, avail - lw);
-      return left + gapStr + middle + gapStr + truncateToWidth(right, rTarget);
+    // 超宽: 中间列定宽保留, 首列(优先保留)与末列(可压缩)分摊剩余宽度
+    const first = items[0];
+    const last = items[items.length - 1];
+    const middles = items.slice(1, -1);
+    const middleWidth =
+      middles.reduce((a, s) => a + visibleWidth(s), 0) + (middles.length ? gap * (middles.length - 1) : 0);
+    const avail = width - middleWidth - gap * (middles.length + 1);
+    if (avail <= 0) {
+      // 极窄屏: 只留中间列
+      return middles.length ? middles.join(gapStr) : truncateToWidth(first, width);
     }
-
-    // 回退(无分支等): 从右往左依次截, 保左侧
-    let overflow = total - width;
-    const targets = [...widths];
-    for (let i = targets.length - 1; i >= 0 && overflow > 0; i--) {
-      const minKeep = i === 0 ? 4 : 10;
-      const canCut = Math.max(0, targets[i] - minKeep);
-      const cut = Math.min(overflow, canCut);
-      targets[i] -= cut;
-      overflow -= cut;
+    const fw = visibleWidth(first);
+    const lw = visibleWidth(last);
+    let fTarget = fw;
+    let lTarget = lw;
+    if (fw <= avail) {
+      // 首列(上下文条等)全保, 末列吃掉剩余宽度
+      fTarget = fw;
+      lTarget = avail - fw;
+    } else {
+      // 首列本身超长才走这里: 左 35% / 右 65%
+      fTarget = Math.max(4, Math.floor(avail * 0.35));
+      lTarget = Math.max(0, avail - fTarget);
     }
-    return items.map((s, i) => truncateToWidth(s, Math.max(0, targets[i]))).join(gapStr);
+    return [truncateToWidth(first, fTarget), ...middles, truncateToWidth(last, lTarget)].join(gapStr);
   }
 
   pi.on("session_start", async (_event, ctx) => {
@@ -323,7 +322,7 @@ export default function (pi: ExtensionAPI) {
           void refreshDirty();
         },
         render(width: number): string[] {
-          // ── 第一行 第一列: git:branch± ──
+          // ── 第一行: 目录路径 + git 分支 ──
           const cwd = formatDirectory(getCurrentDirectory(ctx.cwd));
           const lastSlash = cwd.lastIndexOf("/");
           const pathPrefix = lastSlash >= 0 ? cwd.slice(0, lastSlash + 1) : "";
@@ -335,9 +334,12 @@ export default function (pi: ExtensionAPI) {
           const dirtyMarker = branch && isDirty ? "±" : "";
           const branchStr = branch ? `git:${branch}${dirtyMarker}` : "";
           const branchColor: "warning" | "success" = isDirty ? "warning" : "success";
-          const col1row1 = branchStr ? theme.fg(branchColor, branchStr) : "";
+          const gitSuffix = branchStr
+            ? theme.fg("dim", "  ") + theme.fg(branchColor, branchStr)
+            : "";
+          const row1 = pathStr + gitSuffix;
 
-          // ── 第一行 第二列: [###.......] XX% • 上下文长度 ──
+          // ── 第三行 第一列: [###.......] XX% • 上下文长度 ──
           const usage = ctx.getContextUsage();
           const pct = usage?.percent ?? 0;
           const pctStr = usage?.percent !== null ? `${Math.round(pct)}%` : "?";
@@ -348,11 +350,11 @@ export default function (pi: ExtensionAPI) {
             colorRgb("#".repeat(filled), ctxRgb) +
             theme.fg("dim", ".".repeat(BLOCKS - filled));
           const ctxLen = contextWindow ? formatContextWindow(contextWindow) : "";
-          const col2row1 =
+          const col1row3 =
             colorRgb("[", ctxRgb) + bar + colorRgb("] ", ctxRgb) + colorRgb(pctStr, ctxRgb) +
             (ctxLen ? theme.fg("dim", " • ") + colorRgb(ctxLen, ctxRgb) : "");
 
-          // ── 第一行 第三列: 接入配置名 • model (thinking) • goal ──
+          // ── 第三行 第二列: 接入配置名 • model (thinking) • goal ──
           const activeModel = currentModel || (ctx.model as ModelWithThinking | undefined);
           const model = modelId || activeModel?.id || ctx.model?.id || "none";
           const provider = activeModel?.provider;
@@ -376,21 +378,32 @@ export default function (pi: ExtensionAPI) {
           const buildCol3 = (modelName: string) => [providerLabel, theme.fg("accent", modelName) + thinkLabel, goalStr]
             .filter(Boolean)
             .join(theme.fg("dim", " • "));
-          let col3row1 = buildCol3(shortModel);
+
+          // ── 第三行 中列: CH(缓存命中率) • t/s(输出速率) ──
+          // CH / t/s 来自 token-rate 扩展；未安装该扩展时取不到值，该列留空。
+          const cacheHitStr = getStatusText(statusMap, STATUS_KEY_CACHE_HIT);
+          const rateStr = getStatusText(statusMap, STATUS_KEY_TOKEN_RATE);
+          // 先判空再上色: theme.fg(color, "") 仍返回非空的纯 ANSI 串,
+          // 直接 filter(Boolean) 会留下多余的分隔符。
+          const rateParts: string[] = [];
+          if (cacheHitStr) rateParts.push(theme.fg("accent", cacheHitStr));
+          if (rateStr) rateParts.push(theme.fg("accent", rateStr));
+          const ratesStr = rateParts.join(theme.fg("dim", " • "));
+
+          let col2row3 = buildCol3(shortModel);
           // 超宽时只压缩模型名中间, 保留 provider / (thinking) / goal 可见
           {
-            const col1W = visibleWidth(col1row1);
-            const col2W = visibleWidth(col2row1);
-            let col3W = visibleWidth(col3row1);
-            const nonEmpty = [col1row1, col2row1, col3row1].filter((s) => visibleWidth(s) > 0).length;
+            const ctxW = visibleWidth(col1row3);
+            const ratesW = ratesStr ? visibleWidth(ratesStr) : 0;
+            const modelW = visibleWidth(col2row3);
+            const nonEmpty = [col1row3, ratesStr, col2row3].filter((s) => visibleWidth(s) > 0).length;
             const gaps = Math.max(0, nonEmpty - 1) * 2;
-            if (col1W + col2W + col3W + gaps > width) {
-              const overhead = col3W - visibleWidth(shortModel); // provider + 分隔 + thinking + goal 占的宽度
-              const modelBudget = width - col1W - col2W - gaps - overhead;
+            if (ctxW + ratesW + modelW + gaps > width) {
+              const overhead = modelW - visibleWidth(shortModel); // provider + 分隔 + thinking + goal 占的宽度
+              const modelBudget = width - ctxW - ratesW - gaps - overhead;
               if (modelBudget < visibleWidth(shortModel)) {
                 shortModel = middleTruncateText(shortModel, Math.max(8, modelBudget));
-                col3row1 = buildCol3(shortModel);
-                col3W = visibleWidth(col3row1);
+                col2row3 = buildCol3(shortModel);
               }
             }
           }
@@ -399,20 +412,11 @@ export default function (pi: ExtensionAPI) {
           const sid = sessionId || "—";
           const row2 = theme.fg("dim", `session:${sid}`);
 
-          // ── 第三行: CH(缓存命中率) • t/s(输出速率) • 路径 (单列) ──
-          // 先判空再上色: theme.fg(color, "") 仍返回非空的纯 ANSI 串,
-          // 直接 filter(Boolean) 会留下多余的分隔符。
-          const row3Parts: string[] = [];
-          // CH / t/s 来自 token-rate 扩展；未安装该扩展时取不到值，第 3 行只显示路径。
-          const cacheHitStr = getStatusText(statusMap, STATUS_KEY_CACHE_HIT);
-          const rateStr = getStatusText(statusMap, STATUS_KEY_TOKEN_RATE);
-          if (cacheHitStr) row3Parts.push(theme.fg("accent", cacheHitStr));
-          if (rateStr) row3Parts.push(theme.fg("accent", rateStr));
-          if (pathStr) row3Parts.push(pathStr);
-          const row3 = row3Parts.join(theme.fg("dim", " • "));
+          // ── 第三行: 上下文条 | CH • t/s | 模型列 (模型名在行尾) ──
+          const row3 = layoutRow(width, [col1row3, ratesStr, col2row3]);
 
           return [
-            layoutRow(width, col1row1, col2row1, col3row1),
+            truncateToWidth(row1, width),
             truncateToWidth(row2, width),
             truncateToWidth(row3, width),
           ];

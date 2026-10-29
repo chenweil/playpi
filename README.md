@@ -22,7 +22,8 @@ pi -e <path-to-playpi>
 |---|---|---|
 | [zen](./extensions/zen/) | 禅模式展示层:只显示结果——思考、工具行、非最终回答全部隐藏,出问题(工具失败/截断/中断/报错)时才显示。仅展示层,不影响 /export /share / 会话存储。 | `/zen` |
 | [token-rate](./extensions/token-rate/) | 状态行扩展:把当前模型的 output tokens/s 与缓存命中率(CH)发布到状态行。只调 `ctx.ui.setStatus()`,不接管 footer,可与任何自定义 footer 共存。 | 无(自动生效) |
-| [minimal-footer](./extensions/minimal-footer/) | 3 行式自定义 footer:分支±、上下文进度条、provider·model·thinking·goal、sessionID,第 3 行展示 token-rate 发布的 CH 与 t/s。**不随捆绑包安装**(会替换内置 footer),需手动软链到 `~/.pi/agent/extensions/`。 | 无(自动生效,替换内置 footer) |
+| [endbell](./extensions/endbell/) | 事件提示音:subagent 开启、工具出错、需要你选择/输入、一轮对话落定时各响一声(macOS 用 `afplay`)。四种声音各有一个 `ENDBELL_*` 环境变量可单独覆盖。 | 无(自动生效) |
+| [minimal-footer](./extensions/minimal-footer/) | 3 行式自定义 footer:第 1 行目录路径与 git 分支、第 2 行 sessionID、第 3 行上下文进度条、token-rate 发布的 CH·t/s、provider·model·thinking·goal(模型名在行尾)。**不随捆绑包安装**(会替换内置 footer),需手动软链到 `~/.pi/agent/extensions/`。 | 无(自动生效,替换内置 footer) |
 
 每个扩展子目录里都有独立的 `README.md`,写明详细用法与配置。
 
@@ -32,8 +33,8 @@ pi -e <path-to-playpi>
 
 ```bash
 npm test          # 全部单测:token-rate 口径 + zen 过滤规则 + 扩展加载冒烟
-npm run typecheck # 用当前 Pi 的类型定义检查三个扩展
-npm run smoke     # 只跑加载冒烟:三个扩展能否加载、session_start 能否跑通
+npm run typecheck # 用当前 Pi 的类型定义检查所有扩展
+npm run smoke     # 只跑加载冒烟:各扩展能否加载、session_start 能否跑通
 ```
 
 单测放在各扩展的 `lib/*.test.ts`,跨扩展的加载冒烟放在 `tests/`。测试会把 `PI_CODING_AGENT_DIR` 指向临时目录,不会读写你真实的 `~/.pi/agent/zen`。

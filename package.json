@@ -10,6 +10,7 @@
     "pi-extension",
     "zen",
     "minimal-ui",
+    "endbell",
     "token-rate",
     "statusline",
     "cache-hit"
@@ -29,6 +30,10 @@
     "extensions/zen/LICENSE",
     "extensions/zen/README.md",
     "extensions/zen/package.json",
+    "extensions/endbell/index.ts",
+    "extensions/endbell/README.md",
+    "extensions/endbell/LICENSE",
+    "extensions/endbell/package.json",
     "extensions/token-rate/index.ts",
     "extensions/token-rate/lib/token-rate.ts",
     "extensions/token-rate/LICENSE",
@@ -51,7 +56,8 @@
   "pi": {
     "extensions": [
       "./extensions/zen/index.ts",
-      "./extensions/token-rate/index.ts"
+      "./extensions/token-rate/index.ts",
+      "./extensions/endbell/index.ts"
     ]
   }
 }

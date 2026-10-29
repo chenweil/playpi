@@ -3,20 +3,20 @@
 3 行式自定义 footer，替换内置 footer，尽量把常用信息压在一屏内。
 
 ```
-~/project (git:main±)
+~/project  git:main±
 session:01abc
-CH98.0% • 24 t/s • ~/project
+[#####.....] 40% • 200K  CH98.0% • 24 t/s  anthropic • claude-sonnet-4-5 (high)
 ```
 
 ## 布局
 
 | 行 | 内容 |
 |---|---|
-| 1 | `git:branch±`（有未提交改动时带 `±`）· `[##########] 40% • 200K`（上下文用量条 · 窗口大小）· `provider • model (thinking) • goal` |
+| 1 | 当前目录路径 (`~/project`,项目名高亮) · `git:branch±`（有未提交改动时带 `±`） |
 | 2 | `session:<sessionID>` |
-| 3 | `CH…% • … t/s • 路径` |
+| 3 | `[##########] 40% • 200K`（上下文用量条 · 窗口大小）· `CH…% • … t/s` · `provider • model (thinking) • goal` |
 
-超宽时按列压缩：优先保住中间的上下文条与左边的分支，先压模型名中间，最后才截断。
+模型名在第 3 行**末尾**。超宽时按列压缩：优先保住左边的上下文条与中间的 CH / t/s，先压模型名中间，最后才截断。
 
 ## 第 3 行的来源
 
@@ -24,7 +24,7 @@ CH（缓存命中率）与 t/s（输出速率）**由 [token-rate](../token-rate
 
 - 通过 `footerData.getExtensionStatuses()` 读 `cache-hit` 与 `token-rate` 两个 key；
 - 本扩展**不再自己计算**，避免两份口径不一致；
-- 未安装 token-rate、或还没有已完成的回答时，第 3 行退化为只显示路径；
+- 未安装 token-rate、或还没有已完成的回答时，第 3 行中列留空；
 - 值为空串/`undefined` 时不产生多余的 ` • ` 分隔符。
 
 ## 安装
@@ -45,7 +45,7 @@ pi 启动时会扫描全局扩展目录下的 `*.ts` / `*.js`，**软链同样�
 
 | 依赖 | 说明 |
 |---|---|
-| [token-rate](../token-rate/)（playpi 包） | 提供第 3 行的 `cache-hit` / `token-rate` 状态；缺失时该行只显示路径 |
+| [token-rate](../token-rate/)（playpi 包） | 提供第 3 行中列的 `cache-hit` / `token-rate` 状态；缺失时该列留空 |
 | `git` 命令 | 第 1 行的分支与 `±` 脏标记；非 git 目录自动隐藏标记 |
 | `@earendil-works/pi-tui` | `visibleWidth()` / `truncateToWidth()` 排版工具 |
 
