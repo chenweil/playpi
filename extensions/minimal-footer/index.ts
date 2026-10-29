@@ -311,7 +311,23 @@ export default function (pi: ExtensionAPI) {
 
     ctx.ui.setFooter((tui, theme, footerData) => {
       tuiRef = tui;
-      const unsub = footerData.onBranchChange(() => tui.requestRender());
+      // footerData 是 Pi 的内部接缝（ReadonlyFooterDataProvider）。如果未来某版
+      // 改了它的形状，按「单点降级」处理：缺哪个方法就丢哪一项，footer 主体
+      // 和其余项目照常渲染，而不是整块 footer 抛错消失。
+      //
+      //   getGitBranch 缺失         → 第一行 git 后缀留空
+      //   getExtensionStatuses 缺失 → CH / t/s / goal 留空
+      //   onBranchChange 缺失       → 丢掉分支变化的重渲染订阅（由 refreshDirty 兜底）
+      const branchOf =
+        typeof footerData?.getGitBranch === "function" ? () => footerData.getGitBranch() : () => null;
+      const statusesOf = () =>
+        typeof footerData?.getExtensionStatuses === "function"
+          ? footerData.getExtensionStatuses()
+          : undefined;
+      const unsub =
+        typeof footerData?.onBranchChange === "function"
+          ? footerData.onBranchChange(() => tui.requestRender())
+          : () => {};
 
       return {
         dispose() {
@@ -330,7 +346,7 @@ export default function (pi: ExtensionAPI) {
           const pathStr = projectName
             ? theme.fg("dim", pathPrefix) + theme.fg("accent", theme.bold(projectName))
             : theme.fg("dim", cwd);
-          const branch = footerData.getGitBranch();
+          const branch = branchOf();
           const dirtyMarker = branch && isDirty ? "±" : "";
           const branchStr = branch ? `git:${branch}${dirtyMarker}` : "";
           const branchColor: "warning" | "success" = isDirty ? "warning" : "success";
@@ -371,7 +387,7 @@ export default function (pi: ExtensionAPI) {
           const providerLabel = provider
             ? (providerColor ? colorRgb(provider, providerColor) : theme.fg("muted", provider))
             : "";
-          const statusMap = footerData.getExtensionStatuses?.();
+          const statusMap = statusesOf();
           const statuses = getExtensionStatusValues(statusMap);
           const goalStatus = statuses.find((status) => /goal/i.test(status));
           const goalStr = goalStatus ? theme.fg("warning", goalStatus) : "";

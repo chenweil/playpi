@@ -27,6 +27,18 @@ CH（缓存命中率）与 t/s（输出速率）**由 [token-rate](../token-rate
 - 未安装 token-rate、或还没有已完成的回答时，第 3 行中列留空；
 - 值为空串/`undefined` 时不产生多余的 ` • ` 分隔符。
 
+## Pi 升级时怎么坏
+
+本扩展读的是 Pi 的 `footerData`（`ReadonlyFooterDataProvider`）。它是内部接缝，但**不会一处坏、整块死**——三个方法各自探测，缺哪个只丢对应那一项：
+
+| 缺失的接缝 | 表现 | 影响其他部分 |
+|---|---|---|
+| `getGitBranch()` | 第 1 行 git 后缀消失 | 否 |
+| `getExtensionStatuses()` | CH / t/s / goal 消失 | 否 |
+| `onBranchChange()` | 丢掉分支变化重渲染订阅（`refreshDirty` 兵底） | 否 |
+
+所以上游改形状时， footer 主体仍会渲染，凭肉眼就能看出少了哪项，而不是一片空白。这和 [zen](../zen/) 的「探测 + 单点降级」是同一个模式。
+
 ## 安装
 
 本扩展会**替换内置 footer**，属于个人偏好，因此**不随 playpi 捆绑包安装**——它不在仓库根 `package.json` 的 `pi.extensions` 里，`pi install` 整仓不会带上它。
