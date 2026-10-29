@@ -1,0 +1,56 @@
+name: CI
+
+# 三道关卡：npm test / npm run typecheck / npm run smoke。
+#
+# Pi 每发一版，扩展依赖的内部接缝就可能变。push 与 PR 只能在有人提交时
+# 发现问题；schedule 用来在上游悄悄发版时提前预警，届时日志里的
+# 「Pi 校验基线」会显示这次跑的是哪一版。
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # 01:00 UTC = 09:00 北京时间。GitHub 的 schedule 不保证准点，
+    # 高峰期可能延迟 10~60 分钟。
+    - cron: "0 1 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # 本仓的运行时依赖是 peerDependencies（由 Pi 提供），lock 文件不入库。
+      # npm 7+ 会自动安装 peerDependencies，所以这里显式装 Pi 的 latest：
+      # 把「默认行为」写成可见的一行，并且能在日志里看到装了哪一版。
+      - name: Install dependencies
+        run: |
+          npm install --no-package-lock --no-fund --no-audit
+          npm install --no-package-lock --no-fund --no-audit \
+            @earendil-works/pi-coding-agent@latest
+
+      # 扩展依赖 Pi 的内部接缝。记下本次校验基线，回归时能直接对比版本。
+      # 注意：不能用 require('@earendil-works/pi-coding-agent/package.json')，
+      # 该包没有导出 ./package.json，只能直接读文件。
+      - name: Report Pi baseline
+        run: |
+          version=$(node -p "JSON.parse(require('fs').readFileSync('node_modules/@earendil-works/pi-coding-agent/package.json','utf8')).version")
+          echo "Pi 校验基线: ${version}"
+          echo "### Pi 校验基线: \`${version}\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Load smoke
+        run: npm run smoke

@@ -23,7 +23,7 @@ pi -e <path-to-playpi>
 | [zen](./extensions/zen/) | 禅模式展示层:只显示结果——思考、工具行、非最终回答全部隐藏,出问题(工具失败/截断/中断/报错)时才显示。仅展示层,不影响 /export /share / 会话存储。 | `/zen` |
 | [token-rate](./extensions/token-rate/) | 状态行扩展:把当前模型的 output tokens/s 与缓存命中率(CH)发布到状态行。只调 `ctx.ui.setStatus()`,不接管 footer,可与任何自定义 footer 共存。 | 无(自动生效) |
 | [endbell](./extensions/endbell/) | 事件提示音:subagent 开启、工具出错、需要你选择/输入、一轮对话落定时各响一声(macOS 用 `afplay`)。四种声音各有一个 `ENDBELL_*` 环境变量可单独覆盖。 | 无(自动生效) |
-| [minimal-footer](./extensions/minimal-footer/) | 3 行式自定义 footer:第 1 行目录路径与 git 分支、第 2 行 sessionID、第 3 行上下文进度条、token-rate 发布的 CH·t/s、provider·model·thinking·goal(模型名在行尾)。**不随捆绑包安装**(会替换内置 footer),需手动软链到 `~/.pi/agent/extensions/`。 | 无(自动生效,替换内置 footer) |
+| [minimal-footer](./extensions/minimal-footer/) | **个人偏好件，非对外推荐**（会替掉内置 UI，只适合自己用）。3 行式自定义 footer:第 1 行目录路径与 git 分支、第 2 行 sessionID、第 3 行上下文进度条、token-rate 发布的 CH·t/s、provider·model·thinking·goal(模型名在行尾)。**不随捆绑包安装**(会替换内置 footer),需手动软链到 `~/.pi/agent/extensions/`。 | 无(自动生效,替换内置 footer) |
 
 每个扩展子目录里都有独立的 `README.md`,写明详细用法与配置。
 

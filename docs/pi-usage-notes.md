@@ -201,8 +201,9 @@ pi -e <path-to-playpi>
 
 ### 当前基线
 
-- Pi `1.3.0`（2026-10-15）是当前最新版本；2026-10-19 ~ 10-21 这一周上游没有发版，main 分支的提交都不涉及扩展 API 的破坏性变更。
+- 本地 `node_modules` 里装的是 Pi `1.3.0`，但已发布的 `pi` CLI 已是 `1.4.0` —— **本地全绿不等于新版本可用**，CI 才是真正的防线。
 - 仓库的 zen / token-rate / minimal-footer 已在 Pi 1.3.0 的全屏 TUI 下实测通过；endbell 随包发布较晚，尚未做同等的全屏 TUI 手工复核。
+- 每次 CI 运行会在日志与 Summary 里打印 `Pi 校验基线: x.y.z`。对比两次运行的这一行，就能判断回归是「Pi 发版导致的」还是「自己改坏的」。
 - `peerDependencies` 统一写成 `>=0.85.0 <2.0.0`：Pi 不会校验 peer 版本范围，但过窄的范围会让外部安装者拿到错误信息。
 
 ### 上游两个已知坑
@@ -222,6 +223,8 @@ npm run smoke     # 只跑加载冒烟：各扩展能否加载、session_start �
 
 `npm test` 与 `npm run smoke` 都会把 `PI_CODING_AGENT_DIR` 指向临时目录，不会读写你真实的 `~/.pi/agent/zen`。
 
+这三道关卡已挂到 GitHub Actions（`.github/workflows/ci.yml`），在 push、PR、以及每天 01:00 UTC（北京时间 09:00）定时跑。CI 里显式装 `@earendil-works/pi-coding-agent@latest`：本仓的 Pi 是 peerDependency，npm 7+ 会自动装它，显式写出来只是为了把「校验哪一版」摆到明面上。仓库的 `package-lock.json` 保持不入库（对 peerDep 仓来说它只锁 typescript，而 typescript 已在 `devDependencies` 里显式声明）。
+
 Pi 升级后手工过一遍：
 
 1. 启动 pi，footer 三行是否齐全（分支± / 上下文进度条 / provider·model·thinking / sessionID / CH+t/s）。
@@ -230,11 +233,3 @@ Pi 升级后手工过一遍：
 4. `/export` 一个文件，确认里面是完整原文（含工具调用与工具输出），不是 Zen 过滤后的展示结果。
 
 类型检查是后加的护栏：Pi 1.3.0 的 `ExtensionAPI` 上没有 `cwd`（只有 `ctx.cwd`），而 Pi 从 0.84 起就没有这个属性，靠类型检查才发现 minimal-footer 里的 `pi.cwd` 一直是 `undefined`。
-
----
-
-## 待补充
-
-- 更多 provider 配置踩坑
-- 项目级 pi 配置与多环境差异（dev / test / prod）
-- 会话管理与导出后的二次使用方式

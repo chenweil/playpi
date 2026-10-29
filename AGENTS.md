@@ -44,6 +44,8 @@ npm run typecheck # 用当前 Pi 的类型定义检查所有扩展
 npm run smoke     # 只跑加载冒烟：扩展能否加载、session_start 能否跑通
 ```
 
+这三道已在 GitHub Actions 上跑（`.github/workflows/ci.yml`，push / PR / 每日 01:00 UTC）。本地 `node_modules` 里的 Pi 版本可能落后于已发布的 `pi` CLI，**本地全绿不等于新版本可用**，以 CI 的「Pi 校验基线」为准。
+
 `npm test` 与 `npm run smoke` 会把 `PI_CODING_AGENT_DIR` 指向临时目录，**不会读写真实的 `~/.pi/agent/zen`**。
 
 `typecheck` 不是可选项：Pi 1.3.0 的 `ExtensionAPI` 上**没有** `cwd`（只有 `ctx.cwd`），Pi 从 0.84 起就没这个属性——`pi.cwd` 一直是 `undefined` 就是靠类型检查才发现的。
